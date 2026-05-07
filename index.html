@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="アンカツ+（プラス）- 洲本市の地域ニュース・情報サイト">
+    <title>アンカツ+（プラス）- 洲本のまち、人、イベント情報</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1b5e20;
+            --secondary-color: #0277bd;
+            --accent-color: #ff6f00;
+            --bg-color: #ffffff;
+            --text-color: #212121;
+            --border-color: #e0e0e0;
+            --light-gray: #f5f5f5;
+            --dark-mode-bg: #1a1a1a;
+            --dark-mode-text: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Hiragino Sans', 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: var(--dark-mode-bg);
+            color: var(--dark-mode-text);
+        }
+
+        /* Header */
+        header {
+            background-color: var(--bg-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode header {
+            background-color: var(--dark-mode-bg);
+            border-bottom-color: var(--secondary-color);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 0.1em;
+        }
+
+        .logo-sub {
+            font-size: 0.7rem;
+            color: var(--secondary-color);
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            display: none;
+        }
+
+        .search-box.active {
+            display: block;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            width: 200px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        body.dark-mode .search-box input {
+            background-color: var(--dark-mode-bg);
+            color: var(--dark-mode-text);
+            border-color: #333;
+        }
+
+        button {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            transition: color 0.3s;
+        }
+
+        body.dark-mode button {
+            color: var(--dark-mode-text);
+        }
+
+        button:hover {
+            color: var(--primary-color);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background-color: var(--text-color);
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        body.dark-mode .hamburger span {
+            background-color: var(--dark-mode-text);
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-8px, 8px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-8px, -8px);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* View Container */
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Home View */
+        .home-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Main Article Section */
+        .main-article-section {
+            flex: 0.65;
+        }
+
+        .featured-article {
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode .featured-article {
+            background-color: #2a2a2a;
+        }
+
+        .featured-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .featured-content {
+            padding: 2rem;
+        }
+
+        .article-category {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .featured-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            color: var(--text-color);
+        }
+
+        body.dark-mode .featured-title {
+            color: var(--dark-mode-text);
+        }
+
+        .featured-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        body.dark-mode .featured-meta {
+            color: #999;
+        }
+
+        .featured-excerpt {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        body.dark-mode .featured-excerpt {
+            color: #ccc;
+        }
+
+        .read-more-btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .read-more-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Related Articles */
+        .related-articles {
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--text-color);
+        }
+
+        body.dark-mode .section-title {
+            color: var(--dark-mode-text);
+            border-bottom-color: var(--secondary-color);
+        }
+
+        .article-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .article-card {
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        body.dark-mode .article-card {
+            background-color: #2a2a2a;
+        }
+
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .article-card-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .article-card-content {
+            padding: 1rem;
+        }
+
+        .article-card-category {
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .article-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            line-height: 1.3;
+        }
+
+        /* Right Sidebar */
+        .sidebar {
+            flex: 0.35;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .news-item {
+            display: flex;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .news-item:hover {
+            opacity: 0.7;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .news-content {
+            flex: 1;
+        }
+
+        .news-category {
+            font-size: 0.7rem;
+            color: var(--secondary-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.2rem;
+        }
+
+        .news-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-color);
+        }
+
+        body.dark-mode .news-title {
+            color: var(--dark-mode-text);
+        }
+
+        .news-date {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 0.3rem;
+        }
+
+        /* Category Filter */
+        .category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        body.dark-mode .category-btn {
+            background-color: #2a2a2a;
+            border-color: #333;
+            color: var(--dark-mode-text);
+        }
+
+        .category-btn.active,
+        .category-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Article View */
+        .article-view {
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        body.dark-mode .article-view {
+            background-color: #2a2a2a;
+        }
+
+        .article-header {
+            background-color: var(--bg-color);
+            padding: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        body.dark-mode .article-header {
+            background-color: var(--dark-mode-bg);
+            border-bottom-color: #333;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .article-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .article-full-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        body.dark-mode .article-full-meta {
+            color: #999;
+        }
+
+        .article-full-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        .article-body {
+            padding: 2rem;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+        }
+
+        body.dark-mode .article-body {
+            background-color: var(--dark-mode-bg);
+            color: var(--dark-mode-text);
+        }
+
+        .article-body p {
+            margin-bottom: 1.5rem;
+        }
+
+        .article-body h3 {
+            font-size: 1.3rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .article-body ul,
+        .article-body ol {
+            margin-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-body li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-tags {
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: var(--light-gray);
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        body.dark-mode .tag {
+            background-color: #333;
+        }
+
+        .tag:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .home-view {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .main-article-section {
+                flex: 1;
+            }
+
+            .sidebar {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .logo {
+                font-size: 1.3rem;
+            }
+
+            .header-controls {
+                gap: 0.5rem;
+            }
+
+            .search-box input {
+                width: 150px;
+            }
+
+            .featured-article {
+                margin-bottom: 1.5rem;
+            }
+
+            .featured-image {
+                height: 200px;
+            }
+
+            .featured-content {
+                padding: 1.5rem;
+            }
+
+            .featured-title {
+                font-size: 1.4rem;
+            }
+
+            .featured-excerpt {
+                font-size: 0.9rem;
+            }
+
+            .article-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .article-full-image {
+                height: 250px;
+            }
+
+            .article-title {
+                font-size: 1.5rem;
+            }
+
+            .article-body {
+                padding: 1.5rem;
+            }
+
+            .category-filter {
+                gap: 0.3rem;
+            }
+
+            .category-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 0.75rem;
+            }
+
+            .featured-image {
+                height: 150px;
+            }
+
+            .featured-content {
+                padding: 1rem;
+            }
+
+            .featured-title {
+                font-size: 1.2rem;
+            }
+
+            .featured-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .read-more-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .news-item {
+                gap: 0.75rem;
+            }
+
+            .news-thumbnail {
+                width: 60px;
+                height: 60px;
+            }
+
+            .news-title {
+                font-size: 0.75rem;
+            }
+
+            .article-full-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #999;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        body.dark-mode .modal-content {
+            background-color: var(--dark-mode-bg);
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        body.dark-mode .modal-close {
+            color: var(--dark-mode-text);
+        }
+
+        .modal-close:hover {
+            color: var(--primary-color);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+
+        body.dark-mode .modal-title {
+            color: var(--dark-mode-text);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                アンカツ+ <span class="logo-sub">Sumoto Stories</span>
+            </div>
+            <div class="header-controls">
+                <button id="searchToggle" title="検索">🔍</button>
+                <div class="search-box" id="searchBox">
+                    <input type="text" id="searchInput" placeholder="記事を検索...">
+                </div>
+                <button id="darkModeToggle" title="ダークモード">🌙</button>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Home View -->
+        <div id="homeView" class="view active">
+            <!-- Category Filter -->
+            <div class="category-filter" id="categoryFilter"></div>
+
+            <!-- Main Content -->
+            <div class="home-view">
+                <!-- Main Article Section -->
+                <div class="main-article-section">
+                    <div id="featuredArticleContainer"></div>
+                    <div class="related-articles">
+                        <h2 class="section-title">関連ニュース</h2>
+                        <div class="article-grid" id="relatedArticles"></div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <div class="sidebar-section">
+                        <h2 class="section-title">最新ニュース</h2>
+                        <div class="news-list" id="newsList"></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+
+        <!-- Article View -->
+        <div id="articleView" class="view">
+            <div id="articleContent"></div>
+        </div>
+
+        <!-- No Results Message -->
+        <div id="noResults" class="no-results" style="display: none;">
+            検索結果がありません
+        </div>
+    </div>
+
+    <!-- Admin Link (hidden, only visible in production) -->
+    <div style="position: fixed; bottom: 20px; right: 20px; opacity: 0.3;">
+        <a href="admin.html" title="Admin">⚙️</a>
+    </div>
+
+    <script>
+        // ============================================
+        // Firebase Configuration
+        // ============================================
+        // 環境に応じて以下の設定を差し替えてください
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase Initialize
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // ============================================
+        // State Management
+        // ============================================
+        let articles = [];
+        let filteredArticles = [];
+        let currentCategory = 'all';
+        let currentSearchQuery = '';
+        let darkMode = localStorage.getItem('darkMode') === 'true';
+
+        // ============================================
+        // Utility Functions
+        // ============================================
+
+        /**
+         * Format date to Japanese format
+         */
+        function formatDate(date) {
+            if (!date) return '';
+            const d = date instanceof Date ? date : date.toDate();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}年${month}月${day}日`;
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Truncate text
+         */
+        function truncate(text, length) {
+            return text.length > length ? text.substring(0, length) + '...' : text;
+        }
+
+        /**
+         * Show loading indicator
+         */
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        /**
+         * Hide loading indicator
+         */
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        /**
+         * Change view
+         */
+        function changeView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewName).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        /**
+         * Update URL hash
+         */
+        function updateHash(hash) {
+            window.location.hash = hash;
+        }
+
+        // ============================================
+        // Dark Mode
+        // ============================================
+
+        /**
+         * Initialize dark mode
+         */
+        function initDarkMode() {
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+            }
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+        }
+
+        /**
+         * Toggle dark mode
+         */
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            localStorage.setItem('darkMode', darkMode);
+            document.body.classList.toggle('dark-mode');
+        }
+
+        // ============================================
+        // Search and Filter
+        // ============================================
+
+        /**
+         * Get categories from articles
+         */
+        function getCategories() {
+            const categories = new Set(articles.map(a => a.category || ''));
+            return Array.from(categories).filter(c => c).sort();
+        }
+
+        /**
+         * Render category filter
+         */
+        function renderCategoryFilter() {
+            const categories = getCategories();
+            const filterContainer = document.getElementById('categoryFilter');
+            filterContainer.innerHTML = '';
+
+            // 全て button
+            const allBtn = document.createElement('button');
+            allBtn.className = 'category-btn active';
+            allBtn.textContent = 'すべて';
+            allBtn.addEventListener('click', () => filterByCategory('all'));
+            filterContainer.appendChild(allBtn);
+
+            // Category buttons
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'category-btn';
+                btn.textContent = cat;
+                btn.addEventListener('click', () => filterByCategory(cat));
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        /**
+         * Filter by category
+         */
+        function filterByCategory(category) {
+            currentCategory = category;
+            currentSearchQuery = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchBox').classList.remove('active');
+
+            // Update active button
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if ((category === 'all' && btn.textContent === 'すべて') ||
+                    (category !== 'all' && btn.textContent === category)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            applyFilters();
+            changeView('homeView');
+        }
+
+        /**
+         * Search articles
+         */
+        function searchArticles(query) {
+            currentSearchQuery = query.toLowerCase();
+            currentCategory = 'all';
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === 'すべて') btn.classList.add('active');
+            });
+            applyFilters();
+        }
+
+        /**
+         * Apply filters and search
+         */
+        function applyFilters() {
+            filteredArticles = articles.filter(article => {
+                const matchCategory = currentCategory === 'all' || article.category === currentCategory;
+                const matchSearch = !currentSearchQuery ||
+                    article.title.toLowerCase().includes(currentSearchQuery) ||
+                    article.body.toLowerCase().includes(currentSearchQuery) ||
+                    (article.tags && article.tags.some(tag => tag.toLowerCase().includes(currentSearchQuery)));
+                return matchCategory && matchSearch;
+            });
+
+            // Sort by featured first, then by date
+            filteredArticles.sort((a, b) => {
+                if (a.featured !== b.featured) return b.featured ? 1 : -1;
+                return b.createdAt - a.createdAt;
+            });
+
+            render();
+        }
+
+        // ============================================
+        // Render Functions
+        // ============================================
+
+        /**
+         * Render featured article
+         */
+        function renderFeaturedArticle() {
+            const container = document.getElementById('featuredArticleContainer');
+            const featured = filteredArticles.find(a => a.featured) || filteredArticles[0];
+
+            if (!featured) {
+                container.innerHTML = '<div class="no-results">記事がありません</div>';
+                return;
+            }
+
+            const excerpt = truncate(featured.body.replace(/<[^>]*>/g, ''), 200);
+            container.innerHTML = `
+                <div class="featured-article">
+                    ${featured.thumbnail ? `<img src="${escapeHtml(featured.thumbnail)}" alt="${escapeHtml(featured.title)}" class="featured-image">` : ''}
+                    <div class="featured-content">
+                        <span class="article-category">${escapeHtml(featured.category || 'その他')}</span>
+                        <h2 class="featured-title">${escapeHtml(featured.title)}</h2>
+                        <div class="featured-meta">
+                            <span>${escapeHtml(featured.author || '編集部')}</span>
+                            <span>${formatDate(featured.createdAt)}</span>
+                        </div>
+                        <p class="featured-excerpt">${excerpt}</p>
+                        <button class="read-more-btn" onclick="viewArticle('${escapeHtml(featured.slug)}')">
+                            記事を読む →
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Render related articles
+         */
+        function renderRelatedArticles() {
+            const container = document.getElementById('relatedArticles');
+            const related = filteredArticles.slice(1, 5);
+
+            if (related.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = related.map(article => `
+                <div class="article-card" onclick="viewArticle('${escapeHtml(article.slug)}')">
+                    ${article.thumbnail ? `<img src="${escapeHtml(article.thumbnail)}" alt="${escapeHtml(article.title)}" class="article-card-image">` : ''}
+                    <div class="article-card-content">
+                        <div class="article-card-category">${escapeHtml(article.category || 'その他')}</div>
+                        <div class="article-card-title">${escapeHtml(article.title)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Render news list (sidebar)
+         */
+        function renderNewsList() {
+            const container = document.getElementById('newsList');
+            const newsList = filteredArticles.slice(0, 10);
+
+            if (newsList.length === 0) {
+                container.innerHTML = '<div class="no-results">記事がありません</div>';
+                return;
+            }
+
+            container.innerHTML = newsList.map(article => `
+                <div class="news-item" onclick="viewArticle('${escapeHtml(article.slug)}')">
+                    ${article.thumbnail ? `<img src="${escapeHtml(article.thumbnail)}" alt="${escapeHtml(article.title)}" class="news-thumbnail">` : '<div class="news-thumbnail" style="background-color: #ddd;"></div>'}
+                    <div class="news-content">
+                        <div class="news-category">${escapeHtml(article.category || 'その他')}</div>
+                        <div class="news-title">${escapeHtml(article.title)}</div>
+                        <div class="news-date">${formatDate(article.createdAt)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Render article detail view
+         */
+        function renderArticleDetail(article) {
+            const container = document.getElementById('articleContent');
+            const tags = (article.tags || []).map(tag => 
+                `<span class="tag" onclick="searchArticles('${escapeHtml(tag)}'); changeView('homeView');">#${escapeHtml(tag)}</span>`
+            ).join('');
+
+            container.innerHTML = `
+                <div class="article-view">
+                    <div class="article-header">
+                        <a href="#" class="back-btn" onclick="changeView('homeView'); return false;">← 戻る</a>
+                        <span class="article-category">${escapeHtml(article.category || 'その他')}</span>
+                        <h1 class="article-title">${escapeHtml(article.title)}</h1>
+                        <div class="article-full-meta">
+                            <span><strong>著者:</strong> ${escapeHtml(article.author || '編集部')}</span>
+                            <span><strong>公開:</strong> ${formatDate(article.createdAt)}</span>
+                        </div>
+                    </div>
+                    ${article.thumbnail ? `<img src="${escapeHtml(article.thumbnail)}" alt="${escapeHtml(article.title)}" class="article-full-image">` : ''}
+                    <div class="article-body">
+                        ${article.body}
+                    </div>
+                    ${tags ? `<div class="article-tags">${tags}</div>` : ''}
+                </div>
+            `;
+        }
+
+        /**
+         * Main render function
+         */
+        function render() {
+            const hasResults = filteredArticles.length > 0;
+            document.getElementById('noResults').style.display = hasResults ? 'none' : 'block';
+
+            if (!hasResults) {
+                return;
+            }
+
+            renderFeaturedArticle();
+            renderRelatedArticles();
+            renderNewsList();
+        }
+
+        // ============================================
+        // Article View
+        // ============================================
+
+        /**
+         * View article by slug
+         */
+        function viewArticle(slug) {
+            const article = articles.find(a => a.slug === slug);
+            if (article) {
+                renderArticleDetail(article);
+                changeView('articleView');
+                updateHash(`article/${slug}`);
+            }
+        }
+
+        /**
+         * Handle hash changes
+         */
+        function handleHashChange() {
+            const hash = window.location.hash.slice(1);
+            if (hash.startsWith('article/')) {
+                const slug = hash.substring(8);
+                viewArticle(slug);
+            } else {
+                changeView('homeView');
+            }
+        }
+
+        // ============================================
+        // Firebase Functions
+        // ============================================
+
+        /**
+         * Fetch articles from Firestore
+         */
+        async function fetchArticles() {
+            showLoading();
+            try {
+                const snapshot = await db.collection('articles')
+                    .where('published', '==', true)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                articles = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    createdAt: doc.data().createdAt || new Date()
+                }));
+
+                renderCategoryFilter();
+                applyFilters();
+            } catch (error) {
+                console.error('Error fetching articles:', error);
+                document.getElementById('noResults').style.display = 'block';
+                document.getElementById('noResults').innerHTML = 'エラー: 記事の読み込みに失敗しました';
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ============================================
+        // Event Listeners
+        // ============================================
+
+        document.getElementById('searchToggle').addEventListener('click', () => {
+            const searchBox = document.getElementById('searchBox');
+            searchBox.classList.toggle('active');
+            if (searchBox.classList.contains('active')) {
+                document.getElementById('searchInput').focus();
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchArticles(e.target.value);
+            changeView('homeView');
+        });
+
+        document.getElementById('hamburger').addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+
+        window.addEventListener('hashchange', handleHashChange);
+
+        // ============================================
+        // Initialize
+        // ============================================
+        function init() {
+            initDarkMode();
+            fetchArticles();
+            handleHashChange();
+        }
+
+        // Start app
+        init();
+    </script>
+</body>
+</html>
