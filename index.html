@@ -7,10 +7,10 @@
     <title>アンカツ+（プラス）- 洲本のまち、人、イベント情報</title>
 
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js"></script>
 
     <style>
         * {
@@ -74,6 +74,8 @@
             font-weight: 700;
             color: var(--primary-color);
             letter-spacing: 0.1em;
+            text-decoration: none;
+            cursor: pointer;
         }
 
         .logo-sub {
@@ -105,6 +107,7 @@
             width: 200px;
             background-color: var(--bg-color);
             color: var(--text-color);
+            font-size: 0.9rem;
         }
 
         body.dark-mode .search-box input {
@@ -120,6 +123,7 @@
             font-size: 1.2rem;
             color: var(--text-color);
             transition: color 0.3s;
+            padding: 0;
         }
 
         body.dark-mode button {
@@ -266,6 +270,7 @@
             font-weight: 600;
             transition: background-color 0.3s;
             cursor: pointer;
+            border: none;
         }
 
         .read-more-btn:hover {
@@ -305,6 +310,7 @@
             transition: transform 0.3s, box-shadow 0.3s;
             text-decoration: none;
             color: var(--text-color);
+            display: block;
         }
 
         body.dark-mode .article-card {
@@ -470,6 +476,7 @@
             text-decoration: none;
             margin-bottom: 1rem;
             font-weight: 600;
+            cursor: pointer;
         }
 
         .article-title {
@@ -574,6 +581,13 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #999;
         }
 
         /* Responsive */
@@ -700,79 +714,13 @@
                 gap: 0.5rem;
             }
         }
-
-        /* No Results */
-        .no-results {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #999;
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background-color: var(--bg-color);
-            border-radius: 8px;
-            padding: 2rem;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        body.dark-mode .modal-content {
-            background-color: var(--dark-mode-bg);
-        }
-
-        .modal-close {
-            float: right;
-            font-size: 2rem;
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-
-        body.dark-mode .modal-close {
-            color: var(--dark-mode-text);
-        }
-
-        .modal-close:hover {
-            color: var(--primary-color);
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--text-color);
-        }
-
-        body.dark-mode .modal-title {
-            color: var(--dark-mode-text);
-        }
     </style>
 </head>
 <body>
     <!-- Header -->
     <header>
         <div class="header-container">
-            <div class="logo">
+            <div class="logo" onclick="goHome()">
                 アンカツ+ <span class="logo-sub">Sumoto Stories</span>
             </div>
             <div class="header-controls">
@@ -834,23 +782,23 @@
         </div>
     </div>
 
-    <!-- Admin Link (hidden, only visible in production) -->
-    <div style="position: fixed; bottom: 20px; right: 20px; opacity: 0.3;">
-        <a href="admin.html" title="Admin">⚙️</a>
+    <!-- Admin Link -->
+    <div style="position: fixed; bottom: 20px; right: 20px; opacity: 0.5; transition: opacity 0.3s;">
+        <a href="admin.html" title="Admin" style="font-size: 1.5rem; text-decoration: none;">⚙️</a>
     </div>
 
     <script>
         // ============================================
         // Firebase Configuration
         // ============================================
-        // 環境に応じて以下の設定を差し替えてください
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyC4HUWd4c5_fdgA-k34i1uthozfqYcRn9A",
+            authDomain: "ankatsu-d4816.firebaseapp.com",
+            projectId: "ankatsu-d4816",
+            storageBucket: "ankatsu-d4816.firebasestorage.app",
+            messagingSenderId: "1005813876395",
+            appId: "1:1005813876395:web:29153748d2a99c6584d9ee",
+            measurementId: "G-TJWJXQZSBL"
         };
 
         // Firebase Initialize
@@ -872,11 +820,11 @@
         // ============================================
 
         /**
-         * Format date to Japanese format
+         * Format date to Japanese format (YYYY年MM月DD日)
          */
         function formatDate(date) {
             if (!date) return '';
-            const d = date instanceof Date ? date : date.toDate();
+            const d = date instanceof Date ? date : date.toDate?.() || new Date(date);
             const year = d.getFullYear();
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
@@ -896,7 +844,8 @@
          * Truncate text
          */
         function truncate(text, length) {
-            return text.length > length ? text.substring(0, length) + '...' : text;
+            const plainText = text.replace(/<[^>]*>/g, '');
+            return plainText.length > length ? plainText.substring(0, length) + '...' : plainText;
         }
 
         /**
@@ -923,10 +872,16 @@
         }
 
         /**
-         * Update URL hash
+         * Go to home
          */
-        function updateHash(hash) {
-            window.location.hash = hash;
+        function goHome() {
+            currentCategory = 'all';
+            currentSearchQuery = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchBox').classList.remove('active');
+            applyFilters();
+            changeView('homeView');
+            window.location.hash = '';
         }
 
         // ============================================
@@ -1040,7 +995,7 @@
             // Sort by featured first, then by date
             filteredArticles.sort((a, b) => {
                 if (a.featured !== b.featured) return b.featured ? 1 : -1;
-                return b.createdAt - a.createdAt;
+                return new Date(b.createdAt) - new Date(a.createdAt);
             });
 
             render();
@@ -1062,7 +1017,7 @@
                 return;
             }
 
-            const excerpt = truncate(featured.body.replace(/<[^>]*>/g, ''), 200);
+            const excerpt = truncate(featured.body, 200);
             container.innerHTML = `
                 <div class="featured-article">
                     ${featured.thumbnail ? `<img src="${escapeHtml(featured.thumbnail)}" alt="${escapeHtml(featured.title)}" class="featured-image">` : ''}
@@ -1073,7 +1028,7 @@
                             <span>${escapeHtml(featured.author || '編集部')}</span>
                             <span>${formatDate(featured.createdAt)}</span>
                         </div>
-                        <p class="featured-excerpt">${excerpt}</p>
+                        <p class="featured-excerpt">${escapeHtml(excerpt)}</p>
                         <button class="read-more-btn" onclick="viewArticle('${escapeHtml(featured.slug)}')">
                             記事を読む →
                         </button>
@@ -1141,7 +1096,7 @@
             container.innerHTML = `
                 <div class="article-view">
                     <div class="article-header">
-                        <a href="#" class="back-btn" onclick="changeView('homeView'); return false;">← 戻る</a>
+                        <a href="#" class="back-btn" onclick="goHome(); return false;">← 戻る</a>
                         <span class="article-category">${escapeHtml(article.category || 'その他')}</span>
                         <h1 class="article-title">${escapeHtml(article.title)}</h1>
                         <div class="article-full-meta">
@@ -1186,7 +1141,7 @@
             if (article) {
                 renderArticleDetail(article);
                 changeView('articleView');
-                updateHash(`article/${slug}`);
+                window.location.hash = `article/${slug}`;
             }
         }
 
@@ -1220,8 +1175,7 @@
 
                 articles = snapshot.docs.map(doc => ({
                     id: doc.id,
-                    ...doc.data(),
-                    createdAt: doc.data().createdAt || new Date()
+                    ...doc.data()
                 }));
 
                 renderCategoryFilter();
