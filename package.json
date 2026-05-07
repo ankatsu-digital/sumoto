@@ -1,0 +1,34 @@
+{
+  "name": "ankatsu-sumoto",
+  "version": "1.0.0",
+  "description": "アンカツ+（プラス）- 洲本市の地域ニュース・情報サイト",
+  "main": "index.html",
+  "scripts": {
+    "setup-admin": "node set-admin.js",
+    "start": "npx http-server",
+    "deploy": "firebase deploy"
+  },
+  "keywords": [
+    "洲本市",
+    "地域ニュース",
+    "ミニコミ誌",
+    "デジタルメディア",
+    "Firebase"
+  ],
+  "author": "ankatsu-digital",
+  "license": "MIT",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ankatsu-digital/sumoto.git"
+  }
+}
