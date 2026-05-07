@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="アンカツ+（プラス）- 管理画面">
+    <title>アンカツ+（プラス）- 管理画面</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1b5e20;
+            --secondary-color: #0277bd;
+            --accent-color: #ff6f00;
+            --bg-color: #ffffff;
+            --text-color: #212121;
+            --border-color: #e0e0e0;
+            --light-gray: #f5f5f5;
+            --error-color: #d32f2f;
+            --success-color: #388e3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Hiragino Sans', 'Helvetica Neue', sans-serif;
+            color: var(--text-color);
+            background-color: var(--light-gray);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--bg-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding: 1.5rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 0.1em;
+            text-decoration: none;
+        }
+
+        .logo-sub {
+            font-size: 0.6rem;
+            color: var(--secondary-color);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Main Layout */
+        .admin-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Tabs Navigation */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            background-color: var(--bg-color);
+            padding: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        /* Rich Text Editor */
+        .editor-toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--light-gray);
+            border-radius: 4px 4px 0 0;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+        }
+
+        .editor-toolbar button {
+            padding: 0.4rem 0.8rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .editor-toolbar button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        #richEditor {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Image Upload */
+        .image-upload {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .file-input-label:hover {
+            background-color: var(--primary-color);
+        }
+
+        .image-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Checkboxes and Tags */
+        .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .tags-input {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            min-height: 38px;
+        }
+
+        .tag-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .tag-item button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            font-weight: bold;
+        }
+
+        .tags-input input {
+            flex: 1;
+            border: none;
+            padding: 0.4rem;
+            min-width: 100px;
+        }
+
+        .tags-input input:focus {
+            outline: none;
+        }
+
+        /* Buttons */
+        button[type="submit"],
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.3s;
+        }
+
+        button[type="submit"]:hover,
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--primary-color);
+        }
+
+        .btn-danger {
+            background-color: var(--error-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-danger:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-success:hover {
+            background-color: #2e7d32;
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        /* Articles List */
+        .articles-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .article-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background-color: var(--light-gray);
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s;
+        }
+
+        .article-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .article-info {
+            flex: 1;
+        }
+
+        .article-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .article-status {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .article-status.published {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .article-status.draft {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .article-actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .article-actions .btn-edit {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .article-actions .btn-edit:hover {
+            background-color: var(--primary-color);
+        }
+
+        .article-actions .btn-delete {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .article-actions .btn-delete:hover {
+            background-color: #b71c1c;
+        }
+
+        /* Login Form */
+        .login-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background-color: var(--bg-color);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background-color: #c8e6c9;
+            color: #1b5e20;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .alert-error {
+            background-color: #ffcdd2;
+            color: #b71c1c;
+            border-left: 4px solid var(--error-color);
+        }
+
+        .alert-info {
+            background-color: #e3f2fd;
+            color: #0277bd;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 0 0.75rem;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+                gap: 0;
+            }
+
+            .tab-btn {
+                flex: 1;
+                padding: 0.75rem 0.5rem;
+                font-size: 0.9rem;
+            }
+
+            .tab-content {
+                padding: 1.5rem;
+            }
+
+            .article-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .article-actions {
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .article-actions button {
+                flex: 1;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button[type="submit"],
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger {
+                width: 100%;
+            }
+
+            .image-upload {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* Placeholder States */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                アンカツ+ <span class="logo-sub">Admin</span>
+            </a>
+            <div class="header-actions">
+                <div class="user-info">
+                    <span id="userEmail">ログイン中...</span>
+                </div>
+                <button class="btn-danger" id="logoutBtn" onclick="logout()" style="display: none;">
+                    ログアウト
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login View -->
+    <div id="loginView">
+        <div class="login-container">
+            <h2 class="login-title">管理画面</h2>
+            <div id="loginAlert" class="alert"></div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">メールアドレス</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">パスワード</label>
+                    <input type="password" id="loginPassword" required placeholder="パスワード">
+                </div>
+                <button type="submit" style="width: 100%;">ログイン</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin View -->
+    <div id="adminView" style="display: none;">
+        <div class="admin-container">
+            <!-- Alert Messages -->
+            <div id="successAlert" class="alert alert-success"></div>
+            <div id="errorAlert" class="alert alert-error"></div>
+            <div id="infoAlert" class="alert alert-info"></div>
+
+            <!-- Tabs Navigation -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('articles')">
+                    📰 記事一覧
+                </button>
+                <button class="tab-btn" onclick="switchTab('new-article')">
+                    ➕ 新規作成
+                </button>
+            </div>
+
+            <!-- Articles List Tab -->
+            <div id="articlesTab" class="tab-content active">
+                <h2 style="margin-bottom: 1.5rem;">記事管理</h2>
+                <div id="articlesLoading" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+                <div id="articlesList" class="articles-list"></div>
+                <div id="articlesEmpty" class="empty-state">
+                    <div class="empty-state-icon">📄</div>
+                    <div class="empty-state-text">記事がありません</div>
+                </div>
+            </div>
+
+            <!-- New Article Tab -->
+            <div id="newArticleTab" class="tab-content">
+                <h2 style="margin-bottom: 1.5rem;">新規記事を作成</h2>
+                <form id="articleForm" onsubmit="handleArticleSubmit(event)">
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label for="articleTitle">タイトル *</label>
+                        <input type="text" id="articleTitle" required placeholder="記事のタイトルを入力">
+                    </div>
+
+                    <!-- Slug -->
+                    <div class="form-group">
+                        <label for="articleSlug">スラッグ（URL用）*</label>
+                        <input type="text" id="articleSlug" required placeholder="article-slug">
+                        <small>英数字とハイフンのみ使用可</small>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="form-group">
+                        <label for="articleCategory">カテゴリ *</label>
+                        <input type="text" id="articleCategory" list="categoryList" required placeholder="例：イベント、まちづくり、商店街">
+                        <datalist id="categoryList">
+                            <option value="イベント">
+                            <option value="まちづくり">
+                            <option value="商店街">
+                            <option value="空き家活用">
+                            <option value="学生">
+                            <option value="文化活動">
+                            <option value="地域ニュース">
+                        </datalist>
+                    </div>
+
+                    <!-- Author -->
+                    <div class="form-group">
+                        <label for="articleAuthor">著者</label>
+                        <input type="text" id="articleAuthor" placeholder="著者名（省略可）">
+                    </div>
+
+                    <!-- Thumbnail -->
+                    <div class="form-group">
+                        <label>サムネイル画像</label>
+                        <div class="image-upload">
+                            <div class="file-input-wrapper">
+                                <input type="file" id="thumbnailFile" accept="image/*" onchange="previewThumbnail(event)">
+                                <label for="thumbnailFile" class="file-input-label">画像を選択</label>
+                            </div>
+                            <img id="thumbnailPreview" class="image-preview" style="display: none;">
+                        </div>
+                        <input type="hidden" id="articleThumbnail">
+                    </div>
+
+                    <!-- Body (Rich Text) -->
+                    <div class="form-group">
+                        <label>本文 *</label>
+                        <div class="editor-toolbar">
+                            <button type="button" onclick="formatText('bold')" title="太字">
+                                <strong>B</strong>
+                            </button>
+                            <button type="button" onclick="formatText('italic')" title="斜体">
+                                <em>I</em>
+                            </button>
+                            <button type="button" onclick="formatText('underline')" title="下線">
+                                <u>U</u>
+                            </button>
+                            <button type="button" onclick="formatText('createLink')" title="リンク">
+                                🔗
+                            </button>
+                            <button type="button" onclick="formatText('insertUnorderedList')" title="リスト">
+                                ◦
+                            </button>
+                            <button type="button" onclick="formatText('insertOrderedList')" title="番号付きリスト">
+                                1
+                            </button>
+                            <button type="button" onclick="formatText('createHeading')" title="見出し">
+                                H
+                            </button>
+                        </div>
+                        <div id="richEditor" contenteditable="true" data-placeholder="記事の本文を入力..."></div>
+                        <input type="hidden" id="articleBody">
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="form-group">
+                        <label>タグ（Enterで追加）</label>
+                        <div class="tags-input" id="tagsInput">
+                            <input type="text" id="tagInput" placeholder="タグを入力してEnter">
+                        </div>
+                        <input type="hidden" id="articleTags">
+                    </div>
+
+                    <!-- Featured -->
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="articleFeatured">
+                                <label for="articleFeatured">注目記事として表示</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Published -->
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="articlePublished" checked>
+                                <label for="articlePublished">公開する</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">記事を保存</button>
+                        <button type="button" class="btn-secondary" onclick="resetArticleForm()">リセット</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // Firebase Configuration
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4HUWd4c5_fdgA-k34i1uthozfqYcRn9A",
+            authDomain: "ankatsu-d4816.firebaseapp.com",
+            projectId: "ankatsu-d4816",
+            storageBucket: "ankatsu-d4816.firebasestorage.app",
+            messagingSenderId: "1005813876395",
+            appId: "1:1005813876395:web:29153748d2a99c6584d9ee",
+            measurementId: "G-TJWJXQZSBL"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // ============================================
+        // State Management
+        // ============================================
+        let currentUser = null;
+        let articles = [];
+        let editingArticleId = null;
+        let tags = [];
+
+        // ============================================
+        // Authentication
+        // ============================================
+
+        /**
+         * Check if user is logged in
+         */
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            if (user) {
+                showAdminView();
+                fetchArticles();
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('logoutBtn').style.display = 'block';
+            } else {
+                showLoginView();
+            }
+        });
+
+        /**
+         * Handle login
+         */
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showAlert('loginAlert', 'ログインしました', 'success');
+                document.getElementById('loginForm').reset();
+            } catch (error) {
+                showAlert('loginAlert', 'ログイン失敗: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * Handle logout
+         */
+        async function logout() {
+            try {
+                await auth.signOut();
+                showAlert('loginAlert', 'ログアウトしました', 'success');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // ============================================
+        // UI Functions
+        // ============================================
+
+        /**
+         * Show login view
+         */
+        function showLoginView() {
+            document.getElementById('loginView').style.display = 'block';
+            document.getElementById('adminView').style.display = 'none';
+        }
+
+        /**
+         * Show admin view
+         */
+        function showAdminView() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('adminView').style.display = 'block';
+        }
+
+        /**
+         * Switch tabs
+         */
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+
+            // Reset form if switching to new article
+            if (tabName === 'new-article') {
+                resetArticleForm();
+                editingArticleId = null;
+            }
+        }
+
+        /**
+         * Show alert message
+         */
+        function showAlert(elementId, message, type) {
+            const alertEl = document.getElementById(elementId);
+            alertEl.textContent = message;
+            alertEl.className = `alert alert-${type} show`;
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+            }, 4000);
+        }
+
+        // ============================================
+        // Form Handling
+        // ============================================
+
+        /**
+         * Preview thumbnail
+         */
+        function previewThumbnail(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = document.getElementById('thumbnailPreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        /**
+         * Format text in rich editor
+         */
+        function formatText(command) {
+            document.execCommand(command, false, null);
+            document.getElementById('richEditor').focus();
+        }
+
+        /**
+         * Handle tag input
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            const tagInput = document.getElementById('tagInput');
+            if (tagInput) {
+                tagInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const tag = tagInput.value.trim();
+                        if (tag && !tags.includes(tag)) {
+                            addTag(tag);
+                            tagInput.value = '';
+                        }
+                    }
+                });
+            }
+        });
+
+        /**
+         * Add tag
+         */
+        function addTag(tag) {
+            tags.push(tag);
+            renderTags();
+        }
+
+        /**
+         * Remove tag
+         */
+        function removeTag(tag) {
+            tags = tags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        /**
+         * Render tags
+         */
+        function renderTags() {
+            const tagsInput = document.getElementById('tagsInput');
+            const existingTags = tagsInput.querySelectorAll('.tag-item');
+            existingTags.forEach(el => el.remove());
+
+            tags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag-item';
+                tagEl.innerHTML = `
+                    ${escapeHtml(tag)}
+                    <button type="button" onclick="removeTag('${escapeHtml(tag)}')">×</button>
+                `;
+                tagsInput.insertBefore(tagEl, document.getElementById('tagInput'));
+            });
+
+            document.getElementById('articleTags').value = JSON.stringify(tags);
+        }
+
+        /**
+         * Reset article form
+         */
+        function resetArticleForm() {
+            document.getElementById('articleForm').reset();
+            document.getElementById('richEditor').innerHTML = '';
+            document.getElementById('thumbnailPreview').style.display = 'none';
+            tags = [];
+            renderTags();
+            editingArticleId = null;
+            document.querySelector('.tab-btn[onclick="switchTab(\'new-article\')"]').textContent = '➕ 新規作成';
+        }
+
+        /**
+         * Escape HTML
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Get article form data
+         */
+        async function getArticleFormData() {
+            const title = document.getElementById('articleTitle').value.trim();
+            const slug = document.getElementById('articleSlug').value.trim();
+            const category = document.getElementById('articleCategory').value.trim();
+            const author = document.getElementById('articleAuthor').value.trim();
+            const body = document.getElementById('richEditor').innerHTML;
+            const featured = document.getElementById('articleFeatured').checked;
+            const published = document.getElementById('articlePublished').checked;
+
+            if (!title || !slug || !category || !body) {
+                showAlert('errorAlert', '必須項目を入力してください', 'error');
+                return null;
+            }
+
+            // Upload thumbnail if new file selected
+            let thumbnail = document.getElementById('articleThumbnail').value;
+            const thumbnailFile = document.getElementById('thumbnailFile').files[0];
+            if (thumbnailFile) {
+                try {
+                    const storageRef = storage.ref(`articles/${Date.now()}_${thumbnailFile.name}`);
+                    const snapshot = await storageRef.put(thumbnailFile);
+                    thumbnail = await snapshot.ref.getDownloadURL();
+                } catch (error) {
+                    showAlert('errorAlert', '画像アップロード失敗: ' + error.message, 'error');
+                    return null;
+                }
+            }
+
+            return {
+                title,
+                slug,
+                category,
+                author,
+                body,
+                thumbnail,
+                tags,
+                featured,
+                published,
+                updatedAt: new Date(),
+                createdAt: editingArticleId ? articles.find(a => a.id === editingArticleId)?.createdAt : new Date()
+            };
+        }
+
+        /**
+         * Handle article form submission
+         */
+        async function handleArticleSubmit(event) {
+            event.preventDefault();
+
+            const data = await getArticleFormData();
+            if (!data) return;
+
+            try {
+                const btn = event.target.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.textContent = '保存中...';
+
+                if (editingArticleId) {
+                    // Update existing article
+                    await db.collection('articles').doc(editingArticleId).update(data);
+                    showAlert('successAlert', '記事を更新しました', 'success');
+                } else {
+                    // Create new article
+                    await db.collection('articles').add(data);
+                    showAlert('successAlert', '記事を作成しました', 'success');
+                }
+
+                resetArticleForm();
+                document.getElementById('articlesTab').click();
+                await fetchArticles();
+
+                btn.disabled = false;
+                btn.textContent = '記事を保存';
+            } catch (error) {
+                showAlert('errorAlert', 'エラー: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '記事を保存';
+            }
+        }
+
+        // ============================================
+        // Firebase Functions
+        // ============================================
+
+        /**
+         * Fetch articles from Firestore
+         */
+        async function fetchArticles() {
+            const loading = document.getElementById('articlesLoading');
+            loading.style.display = 'flex';
+
+            try {
+                const snapshot = await db.collection('articles')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                articles = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                renderArticlesList();
+            } catch (error) {
+                showAlert('errorAlert', '記事の読み込みに失敗しました: ' + error.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        /**
+         * Render articles list
+         */
+        function renderArticlesList() {
+            const list = document.getElementById('articlesList');
+            const empty = document.getElementById('articlesEmpty');
+
+            if (articles.length === 0) {
+                list.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            list.style.display = 'flex';
+            empty.style.display = 'none';
+
+            list.innerHTML = articles.map(article => {
+                const date = article.createdAt?.toDate?.() || new Date(article.createdAt);
+                const formattedDate = date.toLocaleString('ja-JP');
+
+                return `
+                    <div class="article-item">
+                        <div class="article-info">
+                            <div class="article-title">${escapeHtml(article.title)}</div>
+                            <div class="article-meta">
+                                <span>${escapeHtml(article.category)}</span>
+                                <span>${escapeHtml(article.author || '編集部')}</span>
+                                <span>${formattedDate}</span>
+                            </div>
+                            <div>
+                                <span class="article-status ${article.published ? 'published' : 'draft'}">
+                                    ${article.published ? '公開中' : '下書き'}
+                                </span>
+                                ${article.featured ? '<span class="article-status" style="background-color: #ff9800;">注目</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="article-actions">
+                            <button class="btn-edit" onclick="editArticle('${article.id}')">
+                                編集
+                            </button>
+                            <button class="btn-delete" onclick="deleteArticle('${article.id}', '${escapeHtml(article.title)}')">
+                                削除
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Edit article
+         */
+        async function editArticle(articleId) {
+            const article = articles.find(a => a.id === articleId);
+            if (!article) return;
+
+            // Populate form
+            document.getElementById('articleTitle').value = article.title;
+            document.getElementById('articleSlug').value = article.slug;
+            document.getElementById('articleCategory').value = article.category;
+            document.getElementById('articleAuthor').value = article.author || '';
+            document.getElementById('richEditor').innerHTML = article.body;
+            document.getElementById('articleThumbnail').value = article.thumbnail || '';
+            document.getElementById('articleFeatured').checked = article.featured || false;
+            document.getElementById('articlePublished').checked = article.published || false;
+
+            // Set thumbnail preview
+            if (article.thumbnail) {
+                const preview = document.getElementById('thumbnailPreview');
+                preview.src = article.thumbnail;
+                preview.style.display = 'block';
+            }
+
+            // Set tags
+            tags = article.tags || [];
+            renderTags();
+
+            // Update UI
+            editingArticleId = articleId;
+            document.querySelector('.tab-btn[onclick="switchTab(\'new-article\')"]').textContent = '✏️ 編集';
+            document.querySelector('.tab-btn[onclick="switchTab(\'new-article\')"]').click();
+        }
+
+        /**
+         * Delete article
+         */
+        async function deleteArticle(articleId, title) {
+            if (!confirm(`「${title}」を削除してもよろしいですか？`)) {
+                return;
+            }
+
+            try {
+                await db.collection('articles').doc(articleId).delete();
+                showAlert('successAlert', '記事を削除しました', 'success');
+                await fetchArticles();
+            } catch (error) {
+                showAlert('errorAlert', '削除に失敗しました: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
