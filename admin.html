@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="アンカツ+（プラス）- 管理画面">
-    <title>アンカツ+（プラス）- 管理画面</title>
+    <meta name="description" content="アンカツ+（プラス）- 洲本市の地域ニュース・情報サイト">
+    <title>アンカツ+（プラス）- 洲本のまち、人、イベント情報</title>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-storage.js"></script>
 
     <style>
@@ -27,14 +26,12 @@
             --text-color: #212121;
             --border-color: #e0e0e0;
             --light-gray: #f5f5f5;
-            --error-color: #d32f2f;
-            --success-color: #388e3c;
         }
 
         body {
             font-family: 'Segoe UI', 'Hiragino Sans', 'Helvetica Neue', sans-serif;
             color: var(--text-color);
-            background-color: var(--light-gray);
+            background-color: var(--bg-color);
             line-height: 1.6;
         }
 
@@ -43,6 +40,9 @@
             background-color: var(--bg-color);
             border-bottom: 2px solid var(--primary-color);
             padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
@@ -61,6 +61,7 @@
             color: var(--primary-color);
             letter-spacing: 0.1em;
             text-decoration: none;
+            cursor: pointer;
         }
 
         .logo-sub {
@@ -72,11 +73,6 @@
             display: flex;
             gap: 1rem;
             align-items: center;
-        }
-
-        .user-info {
-            font-size: 0.9rem;
-            color: #666;
         }
 
         /* Main Layout */
@@ -142,7 +138,6 @@
 
         input[type="text"],
         input[type="email"],
-        input[type="password"],
         input[type="number"],
         textarea,
         select {
@@ -157,7 +152,6 @@
 
         input[type="text"]:focus,
         input[type="email"]:focus,
-        input[type="password"]:focus,
         input[type="number"]:focus,
         textarea:focus,
         select:focus {
@@ -182,6 +176,7 @@
             border-radius: 4px 4px 0 0;
             border: 1px solid var(--border-color);
             border-bottom: none;
+            flex-wrap: wrap;
         }
 
         .editor-toolbar button {
@@ -250,7 +245,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Checkboxes and Tags */
+        /* Checkboxes */
         .checkbox-group {
             display: flex;
             gap: 1rem;
@@ -269,6 +264,7 @@
             height: 18px;
         }
 
+        /* Tags Input */
         .tags-input {
             display: flex;
             gap: 0.5rem;
@@ -346,7 +342,7 @@
         }
 
         .btn-danger {
-            background-color: var(--error-color);
+            background-color: #d32f2f;
             color: white;
             padding: 0.75rem 1.5rem;
             border: none;
@@ -359,22 +355,6 @@
 
         .btn-danger:hover {
             background-color: #b71c1c;
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: background-color 0.3s;
-        }
-
-        .btn-success:hover {
-            background-color: #2e7d32;
         }
 
         /* Button Group */
@@ -434,7 +414,7 @@
         }
 
         .article-status.published {
-            background-color: var(--success-color);
+            background-color: #388e3c;
             color: white;
         }
 
@@ -467,30 +447,12 @@
         }
 
         .article-actions .btn-delete {
-            background-color: var(--error-color);
+            background-color: #d32f2f;
             color: white;
         }
 
         .article-actions .btn-delete:hover {
             background-color: #b71c1c;
-        }
-
-        /* Login Form */
-        .login-container {
-            max-width: 400px;
-            margin: 4rem auto;
-            padding: 2rem;
-            background-color: var(--bg-color);
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .login-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            text-align: center;
-            color: var(--primary-color);
         }
 
         /* Alert Messages */
@@ -508,19 +470,13 @@
         .alert-success {
             background-color: #c8e6c9;
             color: #1b5e20;
-            border-left: 4px solid var(--success-color);
+            border-left: 4px solid #388e3c;
         }
 
         .alert-error {
             background-color: #ffcdd2;
             color: #b71c1c;
-            border-left: 4px solid var(--error-color);
-        }
-
-        .alert-info {
-            background-color: #e3f2fd;
-            color: #0277bd;
-            border-left: 4px solid var(--secondary-color);
+            border-left: 4px solid #d32f2f;
         }
 
         /* Loading */
@@ -544,60 +500,16 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background-color: var(--bg-color);
-            border-radius: 8px;
-            padding: 2rem;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .modal-close {
-            font-size: 2rem;
-            cursor: pointer;
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
             color: #999;
-            background: none;
-            border: none;
-            transition: color 0.3s;
         }
 
-        .modal-close:hover {
-            color: var(--text-color);
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }
 
         /* Responsive */
@@ -646,27 +558,14 @@
                 width: 100%;
             }
 
-            .image-upload {
-                flex-direction: column;
-                align-items: flex-start;
+            .editor-toolbar {
+                gap: 0.3rem;
             }
-        }
 
-        /* Placeholder States */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #999;
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .empty-state-text {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
+            .editor-toolbar button {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -677,184 +576,154 @@
             <a href="index.html" class="logo">
                 アンカツ+ <span class="logo-sub">Admin</span>
             </a>
-            <div class="header-actions">
-                <div class="user-info">
-                    <span id="userEmail">ログイン中...</span>
-                </div>
-                <button class="btn-danger" id="logoutBtn" onclick="logout()" style="display: none;">
-                    ログアウト
-                </button>
-            </div>
         </div>
     </header>
 
-    <!-- Login View -->
-    <div id="loginView">
-        <div class="login-container">
-            <h2 class="login-title">管理画面</h2>
-            <div id="loginAlert" class="alert"></div>
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="form-group">
-                    <label for="loginEmail">メールアドレス</label>
-                    <input type="email" id="loginEmail" required placeholder="admin@example.com">
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">パスワード</label>
-                    <input type="password" id="loginPassword" required placeholder="パスワード">
-                </div>
-                <button type="submit" style="width: 100%;">ログイン</button>
-            </form>
+    <!-- Main Container -->
+    <div class="admin-container">
+        <!-- Alert Messages -->
+        <div id="successAlert" class="alert alert-success"></div>
+        <div id="errorAlert" class="alert alert-error"></div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('articles')">
+                📰 記事一覧
+            </button>
+            <button class="tab-btn" onclick="switchTab('new-article')">
+                ➕ 新規作成
+            </button>
         </div>
-    </div>
 
-    <!-- Admin View -->
-    <div id="adminView" style="display: none;">
-        <div class="admin-container">
-            <!-- Alert Messages -->
-            <div id="successAlert" class="alert alert-success"></div>
-            <div id="errorAlert" class="alert alert-error"></div>
-            <div id="infoAlert" class="alert alert-info"></div>
-
-            <!-- Tabs Navigation -->
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('articles')">
-                    📰 記事一覧
-                </button>
-                <button class="tab-btn" onclick="switchTab('new-article')">
-                    ➕ 新規作成
-                </button>
+        <!-- Articles List Tab -->
+        <div id="articlesTab" class="tab-content active">
+            <h2 style="margin-bottom: 1.5rem;">記事管理</h2>
+            <div id="articlesLoading" class="loading" style="display: none;">
+                <div class="spinner"></div>
             </div>
+            <div id="articlesList" class="articles-list"></div>
+            <div id="articlesEmpty" class="empty-state">
+                <div class="empty-state-icon">📄</div>
+                <div class="empty-state-text">記事がありません</div>
+            </div>
+        </div>
 
-            <!-- Articles List Tab -->
-            <div id="articlesTab" class="tab-content active">
-                <h2 style="margin-bottom: 1.5rem;">記事管理</h2>
-                <div id="articlesLoading" class="loading" style="display: none;">
-                    <div class="spinner"></div>
+        <!-- New Article Tab -->
+        <div id="newArticleTab" class="tab-content">
+            <h2 style="margin-bottom: 1.5rem;">新規記事を作成</h2>
+            <form id="articleForm" onsubmit="handleArticleSubmit(event)">
+                <!-- Title -->
+                <div class="form-group">
+                    <label for="articleTitle">タイトル *</label>
+                    <input type="text" id="articleTitle" required placeholder="記事のタイトルを入力">
                 </div>
-                <div id="articlesList" class="articles-list"></div>
-                <div id="articlesEmpty" class="empty-state">
-                    <div class="empty-state-icon">📄</div>
-                    <div class="empty-state-text">記事がありません</div>
+
+                <!-- Slug -->
+                <div class="form-group">
+                    <label for="articleSlug">スラッグ（URL用）*</label>
+                    <input type="text" id="articleSlug" required placeholder="article-slug">
+                    <small>英数字とハイフンのみ使用可</small>
                 </div>
-            </div>
 
-            <!-- New Article Tab -->
-            <div id="newArticleTab" class="tab-content">
-                <h2 style="margin-bottom: 1.5rem;">新規記事を作成</h2>
-                <form id="articleForm" onsubmit="handleArticleSubmit(event)">
-                    <!-- Title -->
-                    <div class="form-group">
-                        <label for="articleTitle">タイトル *</label>
-                        <input type="text" id="articleTitle" required placeholder="記事のタイトルを入力">
-                    </div>
+                <!-- Category -->
+                <div class="form-group">
+                    <label for="articleCategory">カテゴリ *</label>
+                    <input type="text" id="articleCategory" list="categoryList" required placeholder="例：イベント、まちづくり、商店街">
+                    <datalist id="categoryList">
+                        <option value="イベント">
+                        <option value="まちづくり">
+                        <option value="商店街">
+                        <option value="空き家活用">
+                        <option value="学生">
+                        <option value="文化活動">
+                        <option value="地域ニュース">
+                    </datalist>
+                </div>
 
-                    <!-- Slug -->
-                    <div class="form-group">
-                        <label for="articleSlug">スラッグ（URL用）*</label>
-                        <input type="text" id="articleSlug" required placeholder="article-slug">
-                        <small>英数字とハイフンのみ使用可</small>
-                    </div>
+                <!-- Author -->
+                <div class="form-group">
+                    <label for="articleAuthor">著者</label>
+                    <input type="text" id="articleAuthor" placeholder="著者名（省略可）">
+                </div>
 
-                    <!-- Category -->
-                    <div class="form-group">
-                        <label for="articleCategory">カテゴリ *</label>
-                        <input type="text" id="articleCategory" list="categoryList" required placeholder="例：イベント、まちづくり、商店街">
-                        <datalist id="categoryList">
-                            <option value="イベント">
-                            <option value="まちづくり">
-                            <option value="商店街">
-                            <option value="空き家活用">
-                            <option value="学生">
-                            <option value="文化活動">
-                            <option value="地域ニュース">
-                        </datalist>
-                    </div>
-
-                    <!-- Author -->
-                    <div class="form-group">
-                        <label for="articleAuthor">著者</label>
-                        <input type="text" id="articleAuthor" placeholder="著者名（省略可）">
-                    </div>
-
-                    <!-- Thumbnail -->
-                    <div class="form-group">
-                        <label>サムネイル画像</label>
-                        <div class="image-upload">
-                            <div class="file-input-wrapper">
-                                <input type="file" id="thumbnailFile" accept="image/*" onchange="previewThumbnail(event)">
-                                <label for="thumbnailFile" class="file-input-label">画像を選択</label>
-                            </div>
-                            <img id="thumbnailPreview" class="image-preview" style="display: none;">
+                <!-- Thumbnail -->
+                <div class="form-group">
+                    <label>サムネイル画像</label>
+                    <div class="image-upload">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="thumbnailFile" accept="image/*" onchange="previewThumbnail(event)">
+                            <label for="thumbnailFile" class="file-input-label">画像を選択</label>
                         </div>
-                        <input type="hidden" id="articleThumbnail">
+                        <img id="thumbnailPreview" class="image-preview" style="display: none;">
                     </div>
+                    <input type="hidden" id="articleThumbnail">
+                </div>
 
-                    <!-- Body (Rich Text) -->
-                    <div class="form-group">
-                        <label>本文 *</label>
-                        <div class="editor-toolbar">
-                            <button type="button" onclick="formatText('bold')" title="太字">
-                                <strong>B</strong>
-                            </button>
-                            <button type="button" onclick="formatText('italic')" title="斜体">
-                                <em>I</em>
-                            </button>
-                            <button type="button" onclick="formatText('underline')" title="下線">
-                                <u>U</u>
-                            </button>
-                            <button type="button" onclick="formatText('createLink')" title="リンク">
-                                🔗
-                            </button>
-                            <button type="button" onclick="formatText('insertUnorderedList')" title="リスト">
-                                ◦
-                            </button>
-                            <button type="button" onclick="formatText('insertOrderedList')" title="番号付きリスト">
-                                1
-                            </button>
-                            <button type="button" onclick="formatText('createHeading')" title="見出し">
-                                H
-                            </button>
-                        </div>
-                        <div id="richEditor" contenteditable="true" data-placeholder="記事の本文を入力..."></div>
-                        <input type="hidden" id="articleBody">
+                <!-- Body (Rich Text) -->
+                <div class="form-group">
+                    <label>本文 *</label>
+                    <div class="editor-toolbar">
+                        <button type="button" onclick="formatText('bold')" title="太字">
+                            <strong>B</strong>
+                        </button>
+                        <button type="button" onclick="formatText('italic')" title="斜体">
+                            <em>I</em>
+                        </button>
+                        <button type="button" onclick="formatText('underline')" title="下線">
+                            <u>U</u>
+                        </button>
+                        <button type="button" onclick="formatText('createLink')" title="リンク">
+                            🔗
+                        </button>
+                        <button type="button" onclick="formatText('insertUnorderedList')" title="リスト">
+                            ◦
+                        </button>
+                        <button type="button" onclick="formatText('insertOrderedList')" title="番号付きリスト">
+                            1
+                        </button>
+                        <button type="button" onclick="formatText('createHeading')" title="見出し">
+                            H
+                        </button>
                     </div>
+                    <div id="richEditor" contenteditable="true" data-placeholder="記事の本文を入力..."></div>
+                    <input type="hidden" id="articleBody">
+                </div>
 
-                    <!-- Tags -->
-                    <div class="form-group">
-                        <label>タグ（Enterで追加）</label>
-                        <div class="tags-input" id="tagsInput">
-                            <input type="text" id="tagInput" placeholder="タグを入力してEnter">
-                        </div>
-                        <input type="hidden" id="articleTags">
+                <!-- Tags -->
+                <div class="form-group">
+                    <label>タグ（Enterで追加）</label>
+                    <div class="tags-input" id="tagsInput">
+                        <input type="text" id="tagInput" placeholder="タグを入力してEnter">
                     </div>
+                    <input type="hidden" id="articleTags">
+                </div>
 
-                    <!-- Featured -->
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="articleFeatured">
-                                <label for="articleFeatured">注目記事として表示</label>
-                            </div>
+                <!-- Featured -->
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="articleFeatured">
+                            <label for="articleFeatured">注目記事として表示</label>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Published -->
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <div class="checkbox-item">
-                                <input type="checkbox" id="articlePublished" checked>
-                                <label for="articlePublished">公開する</label>
-                            </div>
+                <!-- Published -->
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="articlePublished" checked>
+                            <label for="articlePublished">公開する</label>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Buttons -->
-                    <div class="button-group">
-                        <button type="submit" class="btn-primary">記事を保存</button>
-                        <button type="button" class="btn-secondary" onclick="resetArticleForm()">リセット</button>
-                    </div>
-                </form>
-            </div>
+                <!-- Buttons -->
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">記事を保存</button>
+                    <button type="button" class="btn-secondary" onclick="resetArticleForm()">リセット</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -873,107 +742,35 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const db = firebase.firestore();
         const storage = firebase.storage();
 
         // ============================================
         // State Management
         // ============================================
-        let currentUser = null;
         let articles = [];
         let editingArticleId = null;
         let tags = [];
-
-        // ============================================
-        // Authentication
-        // ============================================
-
-        /**
-         * Check if user is logged in
-         */
-        auth.onAuthStateChanged((user) => {
-            currentUser = user;
-            if (user) {
-                showAdminView();
-                fetchArticles();
-                document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('logoutBtn').style.display = 'block';
-            } else {
-                showLoginView();
-            }
-        });
-
-        /**
-         * Handle login
-         */
-        async function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                showAlert('loginAlert', 'ログインしました', 'success');
-                document.getElementById('loginForm').reset();
-            } catch (error) {
-                showAlert('loginAlert', 'ログイン失敗: ' + error.message, 'error');
-            }
-        }
-
-        /**
-         * Handle logout
-         */
-        async function logout() {
-            try {
-                await auth.signOut();
-                showAlert('loginAlert', 'ログアウトしました', 'success');
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        }
 
         // ============================================
         // UI Functions
         // ============================================
 
         /**
-         * Show login view
-         */
-        function showLoginView() {
-            document.getElementById('loginView').style.display = 'block';
-            document.getElementById('adminView').style.display = 'none';
-        }
-
-        /**
-         * Show admin view
-         */
-        function showAdminView() {
-            document.getElementById('loginView').style.display = 'none';
-            document.getElementById('adminView').style.display = 'block';
-        }
-
-        /**
          * Switch tabs
          */
         function switchTab(tabName) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
 
-            // Remove active class from buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
 
-            // Show selected tab
             document.getElementById(tabName + 'Tab').classList.add('active');
-
-            // Add active class to clicked button
             event.target.classList.add('active');
 
-            // Reset form if switching to new article
             if (tabName === 'new-article') {
                 resetArticleForm();
                 editingArticleId = null;
@@ -1086,7 +883,7 @@
             tags = [];
             renderTags();
             editingArticleId = null;
-            document.querySelector('.tab-btn[onclick="switchTab(\'new-article\')"]').textContent = '➕ 新規作成';
+            document.querySelector('.tab-btn:nth-of-type(2)').textContent = '➕ 新規作成';
         }
 
         /**
@@ -1169,7 +966,7 @@
                 }
 
                 resetArticleForm();
-                document.getElementById('articlesTab').click();
+                document.getElementById('articlesTab').querySelector('button').click();
                 await fetchArticles();
 
                 btn.disabled = false;
@@ -1289,8 +1086,8 @@
 
             // Update UI
             editingArticleId = articleId;
-            document.querySelector('.tab-btn[onclick="switchTab(\'new-article\')"]').textContent = '✏️ 編集';
-            document.querySelector('.tab-btn[onclick="switchTab(\'new-article\')"]').click();
+            document.querySelector('.tab-btn:nth-of-type(2)').textContent = '✏️ 編集中';
+            document.querySelector('.tab-btn:nth-of-type(2)').click();
         }
 
         /**
@@ -1309,6 +1106,9 @@
                 showAlert('errorAlert', '削除に失敗しました: ' + error.message, 'error');
             }
         }
+
+        // Initialize
+        fetchArticles();
     </script>
 </body>
 </html>
