@@ -1,0 +1,38 @@
+// Firestore Security Rules for アンカツ+ (Sumoto)
+// Production Mode
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // Articles Collection
+    // ============================================
+    match /articles/{document=**} {
+      // Anonymous users can read published articles only
+      allow read: if resource.data.published == true;
+      
+      // Only authenticated users can read unpublished articles (drafts)
+      allow read: if request.auth != null && isAdmin();
+      
+      // Only admins can create, update, delete
+      allow create, update, delete: if request.auth != null && isAdmin();
+    }
+    
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
+    // Check if user is admin
+    function isAdmin() {
+      return request.auth.uid in getAllowedAdmins();
+    }
+    
+    // Get list of allowed admin UIDs from custom claims
+    function getAllowedAdmins() {
+      // This uses Firebase custom claims set via Admin SDK
+      // The claim should be set as: { "admin": true }
+      return request.auth.token.get("admin", false) == true;
+    }
+  }
+}
